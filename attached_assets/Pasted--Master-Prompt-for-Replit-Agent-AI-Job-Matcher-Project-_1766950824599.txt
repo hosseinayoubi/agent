@@ -1,0 +1,268 @@
+🎯 Master Prompt for Replit Agent - AI Job Matcher
+📋 Project Overview
+You are building a professional AI-powered Job Matching Platform with a clean separation between frontend and backend. This application helps users find the most relevant jobs based on their CV/LinkedIn profile and generates customized application materials.
+
+🏗️ Architecture Requirements
+Separate App & Design Structure:
+project-root/
+├── frontend/          # React + Tailwind
+│   ├── src/
+│   │   ├── components/
+│   │   ├── pages/
+│   │   ├── styles/
+│   │   └── App.jsx
+│   └── package.json
+├── backend/           # Python FastAPI
+│   ├── api/
+│   │   ├── routes/
+│   │   ├── services/
+│   │   └── models/
+│   ├── main.py
+│   └── requirements.txt
+└── .replit
+
+🎨 Design System
+Color Palette (Dark Gray Theme):
+
+Primary Background: #1a1a1a
+Secondary Background: #2d2d2d
+Card Background: #383838
+Accent Color: #10b981 (emerald green)
+Text Primary: #f5f5f5
+Text Secondary: #a0a0a0
+Border: #4a4a4a
+
+Interactive Elements:
+
+Smooth hover effects with scale transforms
+Gradient overlays on cards
+Pulsing animations for loading states
+Smooth page transitions
+Micro-interactions on all clickable elements
+
+Responsive Design:
+
+Mobile-first approach
+Breakpoints: sm(640px), md(768px), lg(1024px), xl(1280px)
+Touch-friendly button sizes (min 44x44px)
+
+
+👤 User Authentication System
+Features Required:
+
+Sign Up:
+
+Email + Password
+Google OAuth integration
+Email verification
+Password strength indicator
+
+
+Login:
+
+Standard email/password
+"Remember Me" option
+"Forgot Password" flow
+
+
+User Dashboard:
+
+Profile management
+Saved jobs
+Application history
+Settings
+
+
+
+Database Schema:
+sqlCREATE TABLE users (
+    id UUID PRIMARY KEY,
+    email VARCHAR UNIQUE NOT NULL,
+    password_hash VARCHAR NOT NULL,
+    full_name VARCHAR,
+    created_at TIMESTAMP,
+    last_login TIMESTAMP,
+    is_verified BOOLEAN DEFAULT FALSE
+);
+
+CREATE TABLE user_profiles (
+    id UUID PRIMARY KEY,
+    user_id UUID REFERENCES users(id),
+    cv_file_url TEXT,
+    linkedin_url TEXT,
+    parsed_skills JSONB,
+    experience_level VARCHAR,
+    target_location VARCHAR,
+    updated_at TIMESTAMP
+);
+
+CREATE TABLE job_applications (
+    id UUID PRIMARY KEY,
+    user_id UUID REFERENCES users(id),
+    job_title VARCHAR,
+    company_name VARCHAR,
+    match_percentage FLOAT,
+    job_url TEXT,
+    applied_at TIMESTAMP,
+    custom_cv_url TEXT,
+    cover_letter_url TEXT
+);
+
+🔧 Core Features Implementation
+1. Landing Page (Pre-Auth):
+
+Hero section with clear value proposition
+Animated statistics (jobs matched, users helped)
+"Get Started" CTA leading to signup
+Feature showcase with icons
+
+2. CV/LinkedIn Input (Post-Auth):
+jsx// Two-tab interface:
+- Tab 1: Drag & drop CV upload (PDF/DOCX, max 5MB)
+- Tab 2: LinkedIn URL input with validation
+// Add third input: "Target Location" dropdown (searchable)
+3. AI Analysis Flow:
+python# Backend logic:
+1. Extract text from CV/LinkedIn
+2. Send to OpenAI API with prompt:
+   "Extract: skills (array), experience_level (junior/mid/senior), 
+    job_titles_interested (array), industries (array)"
+3. Store in user_profiles table
+4. Job Search Integration:
+python# Use Serper.dev API:
+query = f"{job_preferences} jobs in {target_location}"
+response = serper_api.search(
+    query=query,
+    location=target_location,
+    num_results=20  # Get extra to filter down to top 10
+)
+5. Matching Algorithm:
+python# For each job:
+match_score = calculate_match(
+    user_skills=user_profile['skills'],
+    job_requirements=job['description'],
+    experience_match=compare_experience_level(),
+    location_match=is_exact_location()
+)
+# Sort by match_score, return top 10
+6. Results Display:
+
+Card Design:
+
+Company logo (if available)
+Job title (bold, large)
+Match percentage (large, colored badge)
+Key matching skills (pills)
+Location + job type
+Checkbox for selection
+"View Full Description" expandable
+
+
+
+7. Customization Engine:
+python# For selected jobs:
+for job in selected_jobs:
+    custom_cv = openai.generate(
+        prompt=f"Rewrite this CV to highlight relevant experience for: {job_title}",
+        user_cv=user_cv_text,
+        job_description=job['description']
+    )
+    cover_letter = openai.generate(
+        prompt=f"Write a compelling cover letter for {user_name} applying to {job_title} at {company}",
+        context={user_profile, job_details}
+    )
+    # Generate PDFs using reportlab or weasyprint
+8. Download & Apply:
+
+Zip file with all customized documents
+Individual download buttons per job
+Direct "Apply Now" links
+Save application history to database
+
+
+⚙️ Technical Implementation
+Frontend (React + Tailwind):
+jsx// Key components to create:
+- <Navbar /> - Sticky with user menu
+- <AuthModal /> - Reusable login/signup
+- <FileUpload /> - With drag-drop and progress
+- <JobCard /> - Reusable job display
+- <MatchBadge /> - Circular progress indicator
+- <LoadingSpinner /> - Custom animated
+- <DownloadButton /> - With success animation
+Backend (Python FastAPI):
+python# Core endpoints:
+POST /api/auth/register
+POST /api/auth/login
+POST /api/profile/upload-cv
+POST /api/profile/parse-linkedin
+POST /api/jobs/search
+POST /api/jobs/match
+POST /api/jobs/generate-materials
+GET /api/jobs/download/{job_id}
+```
+
+### **Environment Variables (Replit Secrets):**
+```
+OPENAI_API_KEY=sk-...
+SERPER_API_KEY=...
+DATABASE_URL=postgresql://...
+JWT_SECRET=...
+GOOGLE_CLIENT_ID=...
+GOOGLE_CLIENT_SECRET=...
+
+🎭 UX Enhancements
+
+Progress Indicators:
+
+Step-by-step wizard (Upload → Analyze → Search → Match → Generate)
+Each step shows estimated time
+Animated progress bar with percentage
+
+
+Feedback:
+
+Toast notifications for all actions
+Success animations (confetti on job match)
+Error states with helpful messages
+
+
+Empty States:
+
+Beautiful illustrations when no jobs found
+Suggestions to broaden search criteria
+
+
+Loading States:
+
+Skeleton screens for job cards
+Pulsing shimmer effect
+"AI is analyzing..." with rotating tips
+
+
+
+
+🚀 Deployment Checklist
+
+ Set up PostgreSQL database in Replit
+ Add all environment variables to Secrets
+ Configure CORS for frontend-backend communication
+ Set up file storage (Replit's built-in or AWS S3)
+ Add rate limiting to API endpoints
+ Implement error logging (Sentry)
+ Add analytics (PostHog or Mixpanel)
+ Create admin panel for monitoring
+
+
+📝 First Steps for Replit Agent
+
+Create the folder structure above
+Initialize React app in frontend/
+Set up FastAPI in backend/
+Install dependencies:
+
+Frontend: react-router-dom, axios, framer-motion, react-dropzone
+Backend: fastapi, uvicorn, sqlalchemy, python-jose, passlib, openai, requests
+
+
+Create .replit config to run both servers concurrently
